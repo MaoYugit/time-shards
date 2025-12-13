@@ -16,16 +16,16 @@ export const useSettingsStore = defineStore('settings', () => {
 
     // 设置选项定义（用于UI渲染）
     const mouseEffectOptions = [
-        { type: 'flower', name: '花朵', icon: '🌸', description: '鼠标移动时绽放花朵' },
-        { type: 'firework', name: '烟花', icon: '🎆', description: '点击时爆发烟花' },
-        { type: 'star', name: '星光', icon: '✨', description: '鼠标留下星光轨迹' }
+        { type: 'flower', name: 'effect_flower', icon: '🌸', description: 'effect_flower_desc' },
+        { type: 'firework', name: 'effect_firework', icon: '🎆', description: 'effect_firework_desc' },
+        { type: 'star', name: 'effect_star', icon: '✨', description: 'effect_star_desc' }
     ];
 
     const backgroundOptions = [
-        { type: 'shards', name: 'Time Shards', icon: '💎', description: '时间碎片 - 科技青色' },
-        { type: 'nebula', name: 'Cosmic Nebula', icon: '🌌', description: '宇宙星云 - 紫粉渐变' },
-        { type: 'matrix', name: 'Matrix Rain', icon: '💚', description: '矩阵代码雨 - 赛博朋克' },
-        { type: 'galaxy', name: 'Galaxy Spiral', icon: '🌀', description: '星系螺旋 - 深蓝金色' }
+        { type: 'shards', name: 'bg_shards', icon: '💎', description: 'bg_shards_desc' },
+        { type: 'nebula', name: 'bg_nebula', icon: '🌌', description: 'bg_nebula_desc' },
+        { type: 'matrix', name: 'bg_matrix', icon: '💚', description: 'bg_matrix_desc' },
+        { type: 'galaxy', name: 'bg_galaxy', icon: '🌀', description: 'bg_galaxy_desc' }
     ];
 
     // Actions

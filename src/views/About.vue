@@ -1,21 +1,21 @@
 <template>
   <div class="about-page">
     <div class="page-header">
-      <h1 class="page-title">关于</h1>
+      <h1 class="page-title">{{ t('about_title') }}</h1>
       <div class="tab-switcher">
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'site' }"
           @click="activeTab = 'site'"
         >
-          关于网站
+          {{ t('about_site_tab') }}
         </button>
         <button 
           class="tab-btn" 
           :class="{ active: activeTab === 'resume' }"
           @click="activeTab = 'resume'"
         >
-          个人简历
+          {{ t('about_resume_tab') }}
         </button>
       </div>
     </div>
@@ -23,35 +23,35 @@
     <div class="content-container" v-if="!loading">
       <transition name="fade" mode="out-in">
         <div v-if="activeTab === 'site'" key="site" class="tab-content site-intro">
-          <div class="markdown-body" v-html="renderMarkdown(configs.site_intro || '暂无网站介绍')"></div>
+          <div class="markdown-body" v-html="renderMarkdown(configs.site_intro || t('about_site_intro_empty'))"></div>
         </div>
         
         <div v-else key="resume" class="tab-content resume">
-          <div class="markdown-body" v-html="renderMarkdown(configs.resume || '暂无个人简历')"></div>
+          <div class="markdown-body" v-html="renderMarkdown(configs.resume || t('about_resume_empty'))"></div>
         </div>
       </transition>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
+    <div v-if="loading" class="loading">{{ t('loading') }}</div>
     
     <!-- 管理员编辑入口 (仅演示，实际应在后台管理) -->
     <div v-if="userStore.user?.role == 1" class="admin-actions">
-      <button class="edit-btn" @click="showEditModal = true">编辑内容</button>
+      <button class="edit-btn" @click="showEditModal = true">{{ t('about_edit_content') }}</button>
     </div>
 
     <!-- 编辑模态框 -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
       <div class="modal-content">
-        <h3>编辑{{ activeTab === 'site' ? '网站介绍' : '个人简历' }}</h3>
+        <h3>{{ t('about_modal_edit_prefix') }}{{ activeTab === 'site' ? t('about_modal_site_intro') : t('about_modal_resume') }}</h3>
         <textarea 
           v-model="editContent" 
           rows="15" 
-          placeholder="支持 Markdown 格式..."
+          :placeholder="t('about_edit_placeholder')"
         ></textarea>
         <div class="modal-actions">
-          <button class="cancel-btn" @click="showEditModal = false">取消</button>
+          <button class="cancel-btn" @click="showEditModal = false">{{ t('cancel') }}</button>
           <button class="save-btn" @click="handleSave" :disabled="saving">
-            {{ saving ? '保存中...' : '保存' }}
+            {{ saving ? t('saving') : t('save') }}
           </button>
         </div>
       </div>
@@ -65,8 +65,10 @@ import { getConfigs, updateConfigs } from '@/api/config';
 import { useUserStore } from '@/stores/user';
 import MarkdownIt from 'markdown-it';
 import gsap from 'gsap';
+import { useI18n } from 'vue-i18n';
 
 const userStore = useUserStore();
+const { t } = useI18n();
 const activeTab = ref('site');
 const configs = ref({});
 const loading = ref(true);
@@ -133,10 +135,10 @@ const handleSave = async () => {
     
     configs.value[key] = editContent.value;
     showEditModal.value = false;
-    alert('保存成功');
+    alert(t('save_success'));
   } catch (error) {
     console.error('Save failed:', error);
-    alert('保存失败');
+    alert(t('save_failed'));
   } finally {
     saving.value = false;
   }

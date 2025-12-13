@@ -1,14 +1,14 @@
 <template>
   <div class="search-page">
     <div class="search-header">
-      <h1 class="page-title">搜索</h1>
+      <h1 class="page-title">{{ t('search_title') }}</h1>
       <div class="search-box-container">
         <input 
           v-model="searchKeyword" 
           @keyup.enter="handleSearch"
           type="text" 
           class="search-input" 
-          placeholder="输入关键词搜索..."
+          :placeholder="t('search_placeholder')"
           autofocus
         />
         <button class="search-btn" @click="handleSearch">
@@ -18,10 +18,10 @@
     </div>
 
     <div class="search-results" v-if="hasSearched">
-      <div v-if="loading" class="loading">搜索中...</div>
+      <div v-if="loading" class="loading">{{ t('searching') }}</div>
       
       <div v-else-if="articles.length > 0" class="results-list">
-        <p class="results-count">找到 {{ articles.length }} 篇关于 "{{ lastKeyword }}" 的文章</p>
+        <p class="results-count">{{ t('search_results_found', { count: articles.length, keyword: lastKeyword }) }}</p>
         
         <div 
           v-for="(article, index) in articles" 
@@ -40,13 +40,13 @@
       </div>
       
       <div v-else class="no-results">
-        <p>未找到关于 "{{ lastKeyword }}" 的相关内容</p>
+        <p>{{ t('search_no_results', { keyword: lastKeyword }) }}</p>
         <div class="suggestions">
-          <p>建议：</p>
+          <p>{{ t('search_suggestions_label') }}</p>
           <ul>
-            <li>检查输入的关键词是否有误</li>
-            <li>尝试使用更通用的词汇</li>
-            <li>尝试搜索其他关键词</li>
+            <li>{{ t('search_suggestion_1') }}</li>
+            <li>{{ t('search_suggestion_2') }}</li>
+            <li>{{ t('search_suggestion_3') }}</li>
           </ul>
         </div>
       </div>
@@ -59,9 +59,11 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { getArticles } from '@/api/article';
 import gsap from 'gsap';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 
 const searchKeyword = ref('');
 const lastKeyword = ref('');
@@ -115,7 +117,10 @@ const highlightText = (text, keyword) => {
 const formatDate = (dateStr) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  return t('date_fmt_short_pattern', {
+    month: date.getMonth() + 1,
+    day: date.getDate()
+  });
 };
 
 const goToArticle = (id) => {

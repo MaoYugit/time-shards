@@ -5,12 +5,14 @@ import { useArticleStore } from "@/stores/article";
 import { renderMarkdown } from "@/utils/markdown";
 import CommentSection from "@/components/comment/CommentSection.vue";
 import gsap from "gsap";
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const articleStore = useArticleStore();
 const article = computed(() => articleStore.currentArticle);
 const loading = computed(() => articleStore.loading);
 const error = computed(() => articleStore.error);
+const { t, locale } = useI18n();
 
 const renderedContent = computed(() => {
   return article.value ? renderMarkdown(article.value.content) : "";
@@ -40,17 +42,17 @@ onMounted(async () => {
 
 <template>
   <div class="article-container">
-    <div v-if="loading" class="loading">Loading shard...</div>
-    <div v-else-if="error" class="error">Shard not found or corrupted.</div>
+    <div v-if="loading" class="loading">{{ t('loading_shard') }}</div>
+    <div v-else-if="error" class="error">{{ t('shard_not_found') }}</div>
     <div v-else-if="article" class="article-detail">
       <header class="article-header">
         <h1 class="title">{{ article.title }}</h1>
         <div class="meta">
           <span class="date">{{
-            new Date(article.create_time).toLocaleDateString()
+            new Date(article.create_time).toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US')
           }}</span>
           <span class="author" v-if="article.user_id"
-            >Author ID: {{ article.user_id }}</span
+            >{{ t('author_id_prefix') }}{{ article.user_id }}</span
           >
           <!-- Add category/tags here if available in article object -->
         </div>

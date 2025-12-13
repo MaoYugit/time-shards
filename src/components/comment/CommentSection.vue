@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import { getComments, createComment } from "@/api/comment";
 import { useUserStore } from "@/stores/user";
 import gsap from "gsap";
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
   articleId: {
@@ -12,6 +13,7 @@ const props = defineProps({
 });
 
 const userStore = useUserStore();
+const { t, locale } = useI18n();
 const comments = ref([]);
 const newComment = ref("");
 const replyTo = ref(null);
@@ -46,7 +48,7 @@ const fetchComments = async () => {
 
 const submitComment = async (parentId = 0) => {
   if (!userStore.isLoggedIn) {
-    alert("Please login to comment");
+    alert(t('comment_login_required'));
     return;
   }
 
@@ -69,7 +71,7 @@ const submitComment = async (parentId = 0) => {
     await fetchComments();
   } catch (error) {
     console.error("Failed to post comment:", error);
-    alert("Failed to post comment");
+    alert(t('comment_post_failed'));
   }
 };
 
@@ -88,20 +90,20 @@ onMounted(() => {
 
 <template>
   <div class="comment-section">
-    <h3>Comments</h3>
+    <h3>{{ t('comments_title') }}</h3>
 
     <div class="comment-form">
       <textarea
         v-model="newComment"
-        placeholder="Leave a shard of thought..."
+        :placeholder="t('comment_placeholder')"
         :disabled="!userStore.isLoggedIn"
       ></textarea>
       <div class="form-actions">
         <button @click="submitComment(0)" :disabled="!userStore.isLoggedIn">
-          Post Comment
+          {{ t('comment_post_btn') }}
         </button>
         <span v-if="!userStore.isLoggedIn" class="login-hint"
-          >Login to comment</span
+          >{{ t('comment_login_hint') }}</span
         >
       </div>
     </div>
@@ -118,19 +120,19 @@ onMounted(() => {
           <div class="comment-header">
             <span class="nickname">{{ comment.nickname }}</span>
             <span class="date">{{
-              new Date(comment.create_time).toLocaleDateString()
+              new Date(comment.create_time).toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US')
             }}</span>
           </div>
           <p>{{ comment.content }}</p>
-          <button class="reply-btn" @click="setReply(comment)">Reply</button>
+          <button class="reply-btn" @click="setReply(comment)">{{ t('comment_reply_btn') }}</button>
 
           <!-- Reply Form -->
           <div v-if="replyTo === comment.id" class="reply-form">
             <textarea
               v-model="replyContent"
-              placeholder="Write a reply..."
+              :placeholder="t('comment_reply_placeholder')"
             ></textarea>
-            <button @click="submitComment(comment.id)">Submit Reply</button>
+            <button @click="submitComment(comment.id)">{{ t('comment_reply_submit') }}</button>
           </div>
 
           <!-- Children -->
@@ -152,7 +154,7 @@ onMounted(() => {
                 <div class="comment-header">
                   <span class="nickname">{{ child.nickname }}</span>
                   <span class="date">{{
-                    new Date(child.create_time).toLocaleDateString()
+                    new Date(child.create_time).toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US')
                   }}</span>
                 </div>
                 <p>{{ child.content }}</p>

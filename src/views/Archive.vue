@@ -1,8 +1,8 @@
 <template>
   <div class="archive-page">
     <div class="page-header">
-      <h1 class="page-title">时间归档</h1>
-      <p class="page-subtitle">时间碎片的编年史</p>
+      <h1 class="page-title">{{ t('archive_title') }}</h1>
+      <p class="page-subtitle">{{ t('archive_subtitle') }}</p>
     </div>
 
     <div class="timeline-container" v-if="!loading && timelineData.length > 0">
@@ -14,7 +14,7 @@
       >
         <div class="year-marker">
           <span class="year-text">{{ yearGroup.year }}</span>
-          <span class="year-count">{{ yearGroup.total }} 篇</span>
+          <span class="year-count">{{ t('article_count_fmt', { count: yearGroup.total }) }}</span>
         </div>
 
         <div class="months-container">
@@ -24,8 +24,8 @@
             class="month-group"
           >
             <div class="month-header">
-              <span class="month-text">{{ monthGroup.month }}月</span>
-              <span class="month-count">{{ monthGroup.articles.length }} 篇</span>
+              <span class="month-text">{{ monthGroup.month }}{{ t('month_suffix') }}</span>
+              <span class="month-count">{{ t('article_count_fmt', { count: monthGroup.articles.length }) }}</span>
             </div>
 
             <div class="articles-list">
@@ -56,8 +56,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-if="!loading && timelineData.length === 0" class="empty">暂无归档</div>
+    <div v-if="loading" class="loading">{{ t('loading') }}</div>
+    <div v-if="!loading && timelineData.length === 0" class="empty">{{ t('no_archive') }}</div>
   </div>
 </template>
 
@@ -67,10 +67,12 @@ import { useRouter } from 'vue-router';
 import { getArticles } from '@/api/article';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useI18n } from 'vue-i18n';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const router = useRouter();
+const { t } = useI18n();
 const timelineData = ref([]);
 const loading = ref(true);
 
@@ -158,7 +160,10 @@ const loadArchive = async () => {
 
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
-  return `${date.getMonth() + 1}月${date.getDate()}日`;
+  return t('date_fmt_short_pattern', {
+    month: date.getMonth() + 1,
+    day: date.getDate()
+  });
 };
 
 const goToArticle = (id) => {

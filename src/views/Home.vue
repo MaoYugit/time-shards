@@ -4,9 +4,11 @@ import { useArticleStore } from "../stores/article";
 import ShardCard from "../components/common/ShardCard.vue";
 import gsap from "gsap";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 
 const articleStore = useArticleStore();
 const router = useRouter();
+const { t } = useI18n();
 const articles = ref([]);
 const page = ref(1);
 const loading = ref(false);
@@ -59,7 +61,7 @@ onMounted(() => {
   <div class="home-container">
     <div class="hero-section">
       <h1 class="glitch-title" data-text="Time Shards">Time Shards</h1>
-      <p class="subtitle">Fragments of thought in the digital void.</p>
+      <p class="subtitle">{{ t("hero_subtitle") }}</p>
     </div>
 
     <div class="articles-list">
@@ -74,9 +76,9 @@ onMounted(() => {
       </transition-group>
     </div>
 
-    <div v-if="loading" class="loading-indicator">Loading...</div>
+    <div v-if="loading" class="loading-indicator">{{ t("loading") }}</div>
     <div v-if="finished && articles.length > 0" class="end-indicator">
-      - End of Transmission -
+      {{ t("end_of_transmission") }}
     </div>
   </div>
 </template>

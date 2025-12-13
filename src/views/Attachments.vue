@@ -1,8 +1,8 @@
 <template>
   <div class="attachments-page">
     <div class="page-header">
-      <h1 class="page-title">附件管理</h1>
-      <p class="page-subtitle">管理所有上传的文件资源</p>
+      <h1 class="page-title">{{ t('attachments_title') }}</h1>
+      <p class="page-subtitle">{{ t('attachments_subtitle') }}</p>
     </div>
 
     <div class="upload-section">
@@ -15,7 +15,7 @@
         @click="triggerFileInput"
       >
         <div class="upload-icon">☁️</div>
-        <p>点击或拖拽文件到此处上传</p>
+        <p>{{ t('upload_drop_hint') }}</p>
         <input 
           type="file" 
           ref="fileInput" 
@@ -46,14 +46,14 @@
         </div>
 
         <div class="file-actions">
-          <button class="action-btn copy" @click="copyUrl(file.url)" title="复制链接">📋</button>
-          <button class="action-btn delete" @click="handleDelete(file.id)" title="删除文件">🗑️</button>
+          <button class="action-btn copy" @click="copyUrl(file.url)" :title="t('copy_link')">📋</button>
+          <button class="action-btn delete" @click="handleDelete(file.id)" :title="t('delete_file')">🗑️</button>
         </div>
       </div>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-if="!loading && attachments.length === 0" class="empty">暂无附件</div>
+    <div v-if="loading" class="loading">{{ t('loading') }}</div>
+    <div v-if="!loading && attachments.length === 0" class="empty">{{ t('no_attachments') }}</div>
   </div>
 </template>
 
@@ -62,8 +62,10 @@ import { ref, onMounted } from 'vue';
 import { getAttachments, uploadFile, deleteAttachment } from '@/api/attachment';
 import { useUserStore } from '@/stores/user';
 import gsap from 'gsap';
+import { useI18n } from 'vue-i18n';
 
 const userStore = useUserStore();
+const { t, locale } = useI18n();
 const attachments = ref([]);
 const loading = ref(true);
 const dragOver = ref(false);
@@ -102,10 +104,10 @@ const handleUpload = async (file) => {
     const res = await uploadFile(file, userStore.user.id);
     // 假设返回的是新上传的文件对象
     attachments.value.unshift(res);
-    alert('上传成功');
+    alert(t('upload_success'));
   } catch (error) {
     console.error('Upload failed:', error);
-    alert('上传失败');
+    alert(t('upload_failed'));
   }
 };
 
@@ -129,20 +131,20 @@ const triggerFileInput = () => {
 };
 
 const handleDelete = async (id) => {
-  if (!confirm('确定要删除这个文件吗？')) return;
+  if (!confirm(t('delete_confirm'))) return;
   
   try {
     await deleteAttachment(id);
     attachments.value = attachments.value.filter(f => f.id !== id);
   } catch (error) {
     console.error('Delete failed:', error);
-    alert('删除失败');
+    alert(t('delete_failed'));
   }
 };
 
 const copyUrl = (url) => {
   navigator.clipboard.writeText(url).then(() => {
-    alert('链接已复制');
+    alert(t('link_copied'));
   });
 };
 
@@ -166,7 +168,7 @@ const formatSize = (bytes) => {
 };
 
 const formatDate = (dateStr) => {
-  return new Date(dateStr).toLocaleDateString();
+  return new Date(dateStr).toLocaleDateString(locale.value === 'zh' ? 'zh-CN' : 'en-US');
 };
 
 onMounted(() => {

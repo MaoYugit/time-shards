@@ -12,9 +12,11 @@ import { uploadFile } from "@/api/attachment";
 import { getCategories, createCategory } from "@/api/category";
 import { getTags, createTag } from "@/api/tag";
 
+import { useI18n } from "vue-i18n";
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const { t } = useI18n();
 
 // --- 状态定义 ---
 const isEditMode = computed(() => !!route.params.id);
@@ -37,11 +39,10 @@ const categories = ref([]);
 const availableTags = ref([]);
 
 // UI 交互状态
-const catSearchText = ref("");
-const showCatDropdown = ref(false);
 const tagSearchText = ref("");
 const showTagDropdown = ref(false);
 const tagInputRef = ref(null);
+const catInputRef = ref(null);
 
 // --- 辅助函数 ---
 const generateSlug = (text) => {
@@ -86,18 +87,19 @@ const filteredCategories = computed(() => {
   );
 });
 
-const onCatFocus = () => {
-  showCatDropdown.value = true;
-  if (form.value.categoryId) {
-    const found = categories.value.find((c) => c.id === form.value.categoryId);
-    if (found) catSearchText.value = found.name;
-  }
-};
+const selectedCategory = computed(() => {
+  if (!form.value.categoryId) return null;
+  return categories.value.find((c) => c.id === form.value.categoryId);
+});
 
 const selectCategory = (cat) => {
   form.value.categoryId = cat.id;
-  catSearchText.value = cat.name;
-  showCatDropdown.value = false;
+  catSearchText.value = "";
+};
+
+const removeCategory = () => {
+  form.value.categoryId = "";
+  catSearchText.value = "";
 };
 
 const handleCreateCategory = async () => {
@@ -212,13 +214,12 @@ const initForm = async () => {
         tags: currentTags,
       };
 
-      // 回显 Category 名称
+      // 回显 Category 名称 (已通过 selectedCategory computed 处理，无需 catSearchText)
+      /*
       if (form.value.categoryId) {
-        const cat = categories.value.find(
-          (c) => c.id === form.value.categoryId
-        );
-        if (cat) catSearchText.value = cat.name;
+        // logic removed
       }
+      */
 
       // 注意：这里无需手动调用编辑器 setValue，v-model 会自动处理 form.value.content 的变化
     } catch (error) {
@@ -245,7 +246,7 @@ const handleCoverUpload = async (event) => {
 const saveArticle = async () => {
   // 1. 简单校验
   if (!form.value.title || !form.value.content) {
-    alert("Title and Content are required");
+    alert(t("title_content_required"));
     return;
   }
 
@@ -266,7 +267,7 @@ const saveArticle = async () => {
     router.push("/");
   } catch (error) {
     console.error("Save failed:", error);
-    alert("Failed to save");
+    alert(t("save_failed"));
   } finally {
     saving.value = false;
   }
@@ -276,7 +277,6 @@ const saveArticle = async () => {
 const handleClickOutside = (e) => {
   const sidebar = document.querySelector(".sidebar");
   if (sidebar && !sidebar.contains(e.target)) {
-    showCatDropdown.value = false;
     showTagDropdown.value = false;
   }
 };
@@ -292,10 +292,10 @@ onMounted(() => {
   <div class="editor-container">
     <!-- 顶部 Header -->
     <div class="editor-header">
-      <h2>{{ isEditMode ? "Edit Shard" : "New Shard" }}</h2>
+      <h2>{{ isEditMode ? t("edit_shard_title") : t("new_shard_title") }}</h2>
       <div class="actions">
         <button @click="saveArticle" class="primary-btn" :disabled="saving">
-          {{ saving ? "Saving..." : "Publish" }}
+          {{ saving ? t("saving") : t("publish") }}
         </button>
       </div>
     </div>
@@ -304,7 +304,7 @@ onMounted(() => {
       <!-- 左侧主编辑区 -->
       <div class="main-editor">
         <div class="form-group title-group">
-          <input v-model="form.title" placeholder="Title" class="title-input" />
+          <input v-model="form.title" :placeholder="t('title_placeholder')" class="title-input" />
         </div>
 
         <!-- 
@@ -325,43 +325,28 @@ onMounted(() => {
       <div class="sidebar">
         <!-- Category -->
         <div class="form-group relative-group">
-          <label>Category</label>
-          <input
-            type="text"
-            v-model="catSearchText"
-            @focus="onCatFocus"
-            @input="showCatDropdown = true"
-            @keydown.enter.prevent="handleCreateCategory"
-            placeholder="Search or create category..."
-            autocomplete="off"
-          />
-          <ul v-if="showCatDropdown" class="dropdown-menu">
-            <li
-              v-for="cat in filteredCategories"
-              :key="cat.id"
-              @click="selectCategory(cat)"
-            >
-              {{ cat.name }}
-            </li>
-            <li
-              v-if="catSearchText && filteredCategories.length === 0"
-              class="create-option"
-              @click="handleCreateCategory"
-            >
-              Create category "{{ catSearchText }}"
-            </li>
-            <li
-              v-if="!catSearchText && filteredCategories.length === 0"
-              class="empty-option"
-            >
-              Type to search...
-            </li>
-          </ul>
+          <label>{{ t("category_label") }}</label>
+          <div class="tags-input-container category-container" @click="catInputRef?.focus()">
+             <span v-if="selectedCategory" class="category-chip">
+                {{ selectedCategory.name }}
+                <i @click.stop="removeCategory">&times;</i>
+             </span>
+             <input
+               v-else
+               ref="catInputRef"
+               type="text"
+               v-model="catSearchText"
+               @keydown.enter.prevent="handleCreateCategory"
+               :placeholder="t('category_placeholder')"
+               class="tag-input-field"
+               autocomplete="off"
+             />
+          </div>
         </div>
 
         <!-- Tags -->
         <div class="form-group relative-group">
-          <label>Tags</label>
+          <label>{{ t("tags_label") }}</label>
           <div class="tags-input-container" @click="tagInputRef?.focus()">
             <span
               v-for="(tag, index) in form.tags"
@@ -378,7 +363,7 @@ onMounted(() => {
               @input="showTagDropdown = true"
               @keydown.enter.prevent="handleCreateTag"
               @keydown.backspace="handleTagInputDelete"
-              placeholder="Add tag..."
+              :placeholder="t('tags_placeholder')"
               class="tag-input-field"
               autocomplete="off"
             />
@@ -396,18 +381,18 @@ onMounted(() => {
               class="create-option"
               @click="handleCreateTag"
             >
-              Create tag "{{ tagSearchText }}"
+              {{ t("create_tag_fmt") }} "{{ tagSearchText }}"
             </li>
           </ul>
         </div>
 
         <!-- Summary & Cover -->
         <div class="form-group">
-          <label>Summary</label>
+          <label>{{ t("summary_label") }}</label>
           <textarea v-model="form.summary" rows="3"></textarea>
         </div>
         <div class="form-group">
-          <label>Cover Image</label>
+          <label>{{ t("cover_image_label") }}</label>
           <input type="file" @change="handleCoverUpload" accept="image/*" />
           <div v-if="form.coverImage" class="image-preview">
             <img :src="form.coverImage" />
@@ -569,7 +554,7 @@ onMounted(() => {
   border-color: #00ff9d;
 }
 
-.tag-chip {
+.tag-chip, .category-chip {
   background: rgba(0, 255, 157, 0.15);
   color: #00ff9d;
   padding: 0.2rem 0.6rem;
@@ -579,7 +564,14 @@ onMounted(() => {
   align-items: center;
   gap: 0.4rem;
 }
-.tag-chip i {
+
+/* Category Chip specific color (Cyan/Blue) */
+.category-chip {
+  background: rgba(0, 210, 255, 0.15);
+  color: #00d2ff;
+}
+
+.tag-chip i, .category-chip i {
   cursor: pointer;
   font-style: normal;
   font-weight: bold;

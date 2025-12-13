@@ -36,9 +36,9 @@
     <!-- 2. 中间区域：导航链接 (桌面端) -->
     <div class="navbar-links desktop-only">
       <router-link to="/">{{ t("home") }}</router-link>
-      <router-link to="/categories">分类</router-link>
-      <router-link to="/tags">标签</router-link>
-      <router-link to="/archive">归档</router-link>
+      <router-link to="/categories">{{ t("nav_categories") }}</router-link>
+      <router-link to="/tags">{{ t("nav_tags") }}</router-link>
+      <router-link to="/archive">{{ t("nav_archive") }}</router-link>
       <!-- 知识库 -->
       <router-link to="/editor" v-if="userStore.isLoggedIn">{{
         t("new")
@@ -53,15 +53,7 @@
         <span class="lang-text">{{ locale === "zh" ? "EN" : "中" }}</span>
       </button>
 
-      <!-- 主题切换 -->
-      <button
-        @click="toggleTheme"
-        class="icon-btn theme-toggle"
-        :title="isDark ? 'Switch to Light' : 'Switch to Dark'"
-      >
-        <span v-if="isDark">🌙</span>
-        <span v-else>☀️</span>
-      </button>
+
 
       <!-- 设置 -->
       <button @click="router.push('/settings')" class="icon-btn" title="Settings">
@@ -133,9 +125,9 @@
       </div>
 
       <router-link to="/" @click="closeMobileMenu">{{ t("home") }}</router-link>
-      <router-link to="/categories" @click="closeMobileMenu">分类</router-link>
-      <router-link to="/tags" @click="closeMobileMenu">标签</router-link>
-      <router-link to="/archive" @click="closeMobileMenu">归档</router-link>
+      <router-link to="/categories" @click="closeMobileMenu">{{ t("nav_categories") }}</router-link>
+      <router-link to="/tags" @click="closeMobileMenu">{{ t("nav_tags") }}</router-link>
+      <router-link to="/archive" @click="closeMobileMenu">{{ t("nav_archive") }}</router-link>
       <router-link
         to="/editor"
         v-if="userStore.isLoggedIn"
@@ -143,7 +135,7 @@
         >{{ t("new") }}</router-link
       >
       <router-link to="/about" @click="closeMobileMenu">{{ t("about") }}</router-link>
-      <router-link to="/settings" @click="closeMobileMenu">设置</router-link>
+      <router-link to="/settings" @click="closeMobileMenu">{{ t("nav_settings") }}</router-link>
 
       <div class="mobile-auth" v-if="userStore.isLoggedIn">
         <router-link to="/profile" @click="closeMobileMenu">{{ userStore.user?.username }}</router-link>
@@ -158,24 +150,21 @@
 
 <script setup>
 import { computed, ref } from "vue";
-import { useThemeStore } from "../../stores/theme";
 import { useUserStore } from "../../stores/user";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 
-const themeStore = useThemeStore();
 const userStore = useUserStore();
 const router = useRouter();
 
 const { t, locale } = useI18n();
 
 // 状态管理
-const isDark = computed(() => themeStore.theme === "dark");
 const searchQuery = ref("");
 const isMobileMenuOpen = ref(false);
 
 // 动作处理
-const toggleTheme = () => themeStore.toggleTheme();
+
 
 const toggleLang = () => {
   locale.value = locale.value === "zh" ? "en" : "zh";

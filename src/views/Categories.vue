@@ -1,8 +1,8 @@
 <template>
   <div class="categories-page">
     <div class="page-header">
-      <h1 class="page-title glitch" data-text="分类">分类</h1>
-      <p class="page-subtitle">探索不同主题的内容碎片</p>
+      <h1 class="page-title glitch" :data-text="t('categories_title')">{{ t('categories_title') }}</h1>
+      <p class="page-subtitle">{{ t('categories_subtitle') }}</p>
     </div>
 
     <div class="categories-grid" v-if="!loading">
@@ -18,14 +18,14 @@
           <h3 class="category-name">{{ category.name }}</h3>
           <p class="category-desc" v-if="category.description">{{ category.description }}</p>
           <div class="category-meta">
-            <span class="article-count">{{ category.articleCount || 0 }} 篇文章</span>
+            <span class="article-count">{{ t('article_count_fmt', { count: category.articleCount || 0 }) }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-if="!loading && categories.length === 0" class="empty">暂无分类</div>
+    <div v-if="loading" class="loading">{{ t('loading') }}</div>
+    <div v-if="!loading && categories.length === 0" class="empty">{{ t('no_categories') }}</div>
   </div>
 </template>
 
@@ -34,8 +34,10 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCategories } from '@/api/category';
 import gsap from 'gsap';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 const categories = ref([]);
 const loading = ref(true);
 

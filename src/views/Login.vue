@@ -6,6 +6,8 @@ import gsap from 'gsap';
 
 const userStore = useUserStore();
 const router = useRouter();
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const username = ref('');
 const password = ref('');
@@ -16,7 +18,7 @@ const handleLogin = async () => {
     await userStore.login({ username: username.value, password: password.value });
     router.push('/');
   } catch (err) {
-    error.value = err.message || 'Login failed';
+    error.value = err.message || t('login_failed');
     gsap.fromTo('.error-msg', { x: -10 }, { x: 10, duration: 0.1, repeat: 5, yoyo: true });
   }
 };
@@ -34,21 +36,21 @@ onMounted(() => {
 <template>
   <div class="auth-container">
     <div class="auth-card">
-      <h2>Access Terminal</h2>
+      <h2>{{ t('login_title') }}</h2>
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label>Identity</label>
+          <label>{{ t('login_identity') }}</label>
           <input v-model="username" type="text" required />
         </div>
         <div class="form-group">
-          <label>Passcode</label>
+          <label>{{ t('login_passcode') }}</label>
           <input v-model="password" type="password" required />
         </div>
         <div v-if="error" class="error-msg">{{ error }}</div>
-        <button type="submit" class="auth-btn">Connect</button>
+        <button type="submit" class="auth-btn">{{ t('login_button') }}</button>
       </form>
       <div class="auth-footer">
-        <router-link to="/register">Initialize New Identity</router-link>
+        <router-link to="/register">{{ t('login_register_link') }}</router-link>
       </div>
     </div>
   </div>

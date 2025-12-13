@@ -1,19 +1,19 @@
 <template>
   <div class="settings-page">
     <div class="page-header">
-      <h1 class="page-title">系统设置</h1>
-      <p class="page-subtitle">个性化你的 Time Shards 体验</p>
+      <h1 class="page-title">{{ t('settings_title') }}</h1>
+      <p class="page-subtitle">{{ t('settings_subtitle') }}</p>
     </div>
 
     <div class="settings-container">
       <!-- 视觉体验设置 -->
       <section class="settings-section">
-        <h2 class="section-title">🎨 视觉体验</h2>
+        <h2 class="section-title">{{ t('section_visual') }}</h2>
         
         <!-- 鼠标特效 -->
         <div class="setting-group">
           <div class="group-header">
-            <h3>鼠标特效</h3>
+            <h3>{{ t('setting_mouse_effect') }}</h3>
             <label class="switch">
               <input 
                 type="checkbox" 
@@ -34,8 +34,8 @@
             >
               <div class="option-icon">{{ effect.icon }}</div>
               <div class="option-info">
-                <span class="option-name">{{ effect.name }}</span>
-                <span class="option-desc">{{ effect.description }}</span>
+                <span class="option-name">{{ t(effect.name) }}</span>
+                <span class="option-desc">{{ t(effect.description) }}</span>
               </div>
             </button>
           </div>
@@ -44,7 +44,7 @@
         <!-- 背景风格 -->
         <div class="setting-group">
           <div class="group-header">
-            <h3>背景风格</h3>
+            <h3>{{ t('setting_background') }}</h3>
           </div>
           
           <div class="options-grid">
@@ -57,8 +57,8 @@
             >
               <div class="option-icon">{{ bg.icon }}</div>
               <div class="option-info">
-                <span class="option-name">{{ bg.name }}</span>
-                <span class="option-desc">{{ bg.description }}</span>
+                <span class="option-name">{{ t(bg.name) }}</span>
+                <span class="option-desc">{{ t(bg.description) }}</span>
               </div>
             </button>
           </div>
@@ -67,23 +67,12 @@
 
       <!-- 常规设置 -->
       <section class="settings-section">
-        <h2 class="section-title">⚙️ 常规设置</h2>
+        <h2 class="section-title">{{ t('section_general') }}</h2>
         
         <div class="setting-row">
           <div class="setting-label">
-            <h3>界面主题</h3>
-            <p>切换明亮/暗黑模式</p>
-          </div>
-          <button class="theme-toggle-btn" @click="themeStore.toggleTheme">
-            <span v-if="themeStore.theme === 'dark'">🌙 暗黑模式</span>
-            <span v-else>☀️ 明亮模式</span>
-          </button>
-        </div>
-
-        <div class="setting-row">
-          <div class="setting-label">
-            <h3>语言设置</h3>
-            <p>切换系统显示语言</p>
+            <h3>{{ t('setting_language') }}</h3>
+            <p>{{ t('setting_language_desc') }}</p>
           </div>
           <button class="lang-toggle-btn" @click="toggleLang">
             <span>{{ locale === 'zh' ? '🇨🇳 中文' : '🇺🇸 English' }}</span>
@@ -93,15 +82,15 @@
 
       <!-- 账户操作 -->
       <section class="settings-section danger-zone" v-if="userStore.isLoggedIn">
-        <h2 class="section-title">👤 账户操作</h2>
+        <h2 class="section-title">{{ t('section_account') }}</h2>
         
         <div class="setting-row">
           <div class="setting-label">
-            <h3>退出登录</h3>
-            <p>安全退出当前账户</p>
+            <h3>{{ t('setting_logout') }}</h3>
+            <p>{{ t('setting_logout_desc') }}</p>
           </div>
           <button class="logout-btn" @click="handleLogout">
-            退出登录
+            {{ t('logout_button') }}
           </button>
         </div>
       </section>
@@ -111,7 +100,6 @@
 
 <script setup>
 import { useSettingsStore } from '@/stores/settings';
-import { useThemeStore } from '@/stores/theme';
 import { useUserStore } from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -119,10 +107,9 @@ import gsap from 'gsap';
 import { onMounted } from 'vue';
 
 const settingsStore = useSettingsStore();
-const themeStore = useThemeStore();
 const userStore = useUserStore();
 const router = useRouter();
-const { locale } = useI18n();
+const { t, locale } = useI18n();
 
 const toggleLang = () => {
   locale.value = locale.value === 'zh' ? 'en' : 'zh';
@@ -130,7 +117,7 @@ const toggleLang = () => {
 };
 
 const handleLogout = () => {
-  if (confirm('确定要退出登录吗？')) {
+  if (confirm(t('logout_confirm'))) {
     userStore.logout();
     router.push('/');
   }

@@ -1,8 +1,8 @@
 <template>
   <div class="tags-page">
     <div class="page-header">
-      <h1 class="page-title">标签云</h1>
-      <p class="page-subtitle">在三维空间中探索标签</p>
+      <h1 class="page-title">{{ t('tags_cloud_title') }}</h1>
+      <p class="page-subtitle">{{ t('tags_cloud_subtitle') }}</p>
     </div>
 
     <!-- 3D标签云容器 -->
@@ -10,7 +10,7 @@
 
     <!-- 热门标签列表 -->
     <div class="hot-tags-section" v-if="hotTags.length > 0">
-      <h2 class="section-title">🔥 热门标签</h2>
+      <h2 class="section-title">{{ t('hot_tags_title') }}</h2>
       <div class="hot-tags-list">
         <button 
           v-for="tag in hotTags" 
@@ -26,7 +26,7 @@
 
     <!-- 所有标签网格 -->
     <div class="all-tags-section" v-if="allTags.length > 0">
-      <h2 class="section-title">📌 所有标签</h2>
+      <h2 class="section-title">{{ t('all_tags_title') }}</h2>
       <div class="tags-grid">
         <button 
           v-for="tag in allTags" 
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
+    <div v-if="loading" class="loading">{{ t('loading') }}</div>
   </div>
 </template>
 
@@ -50,8 +50,10 @@ import { useRouter } from 'vue-router';
 import { getTags, getHotTags } from '@/api/tag';
 import * as THREE from 'three';
 import gsap from 'gsap';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 const cloudContainer = ref(null);
 const allTags = ref([]);
 const hotTags = ref([]);

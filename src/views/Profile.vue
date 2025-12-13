@@ -1,6 +1,6 @@
 <template>
   <div class="profile-page">
-    <div v-if="loading" class="loading">加载中...</div>
+    <div v-if="loading" class="loading">{{ t('loading') }}</div>
     
     <div v-else-if="user" class="profile-container">
       <!-- 个人信息卡片 -->
@@ -11,60 +11,59 @@
             <div class="avatar-glow"></div>
           </div>
           <h2 class="username">{{ user.nickname || user.username }}</h2>
-          <p class="user-role">{{ user.role === 'admin' ? '管理员' : '普通用户' }}</p>
+          <p class="user-role">{{ user.role === 'admin' ? t('role_admin') : t('role_user') }}</p>
         </div>
 
         <div class="info-section">
           <div class="info-group">
-            <label>用户名</label>
+            <label>{{ t('username') }}</label>
             <div class="info-value">{{ user.username }}</div>
           </div>
           <div class="info-group">
-            <label>邮箱</label>
-            <div class="info-value">{{ user.email || '未设置' }}</div>
+            <label>{{ t('email') }}</label>
+            <div class="info-value">{{ user.email || t('not_set') }}</div>
           </div>
           <div class="info-group">
-            <label>注册时间</label>
+            <label>{{ t('registered_at') }}</label>
             <div class="info-value">{{ formatDate(user.createTime) }}</div>
           </div>
           <div class="info-group">
-            <label>个人简介</label>
-            <div class="info-value bio">{{ user.bio || '这个人很懒，什么都没写...' }}</div>
+            <label>{{ t('bio') }}</label>
+            <div class="info-value bio">{{ user.bio || t('bio_placeholder_display') }}</div>
           </div>
           
           <div class="action-buttons">
-            <button class="edit-btn" @click="showEditModal = true">编辑资料</button>
-            <button class="attach-btn" @click="router.push('/attachments')">管理附件</button>
+            <button class="edit-btn" @click="showEditModal = true">{{ t('edit_profile') }}</button>
+            <button class="attach-btn" @click="router.push('/attachments')">{{ t('manage_attachments') }}</button>
           </div>
         </div>
       </div>
 
-      <!-- 编辑模态框 -->
       <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
         <div class="modal-content">
-          <h3>编辑个人资料</h3>
+          <h3>{{ t('edit_profile_title') }}</h3>
           <form @submit.prevent="handleUpdate">
             <div class="form-group">
-              <label>昵称</label>
+              <label>{{ t('nickname') }}</label>
               <input v-model="editForm.nickname" type="text" />
             </div>
             <div class="form-group">
-              <label>邮箱</label>
+              <label>{{ t('email') }}</label>
               <input v-model="editForm.email" type="email" />
             </div>
             <div class="form-group">
-              <label>头像URL</label>
-              <input v-model="editForm.avatar" type="text" placeholder="输入图片地址" />
+              <label>{{ t('avatar_url') }}</label>
+              <input v-model="editForm.avatar" type="text" :placeholder="t('avatar_placeholder')" />
             </div>
             <div class="form-group">
-              <label>个人简介</label>
+              <label>{{ t('bio') }}</label>
               <textarea v-model="editForm.bio" rows="4"></textarea>
             </div>
             
             <div class="modal-actions">
-              <button type="button" class="cancel-btn" @click="showEditModal = false">取消</button>
+              <button type="button" class="cancel-btn" @click="showEditModal = false">{{ t('cancel') }}</button>
               <button type="submit" class="save-btn" :disabled="updating">
-                {{ updating ? '保存中...' : '保存修改' }}
+                {{ updating ? t('saving') : t('save_changes') }}
               </button>
             </div>
           </form>
@@ -73,8 +72,8 @@
     </div>
 
     <div v-else class="error-state">
-      <p>未登录或无法获取用户信息</p>
-      <button @click="router.push('/login')">去登录</button>
+      <p>{{ t('not_logged_in') }}</p>
+      <button @click="router.push('/login')">{{ t('go_to_login') }}</button>
     </div>
   </div>
 </template>
@@ -83,11 +82,13 @@
 import { ref, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user';
+import { useI18n } from 'vue-i18n';
 import { getUserById, updateUser } from '@/api/user';
 import gsap from 'gsap';
 
 const router = useRouter();
 const userStore = useUserStore();
+const { t } = useI18n();
 
 const user = ref(null);
 const loading = ref(true);
@@ -164,10 +165,10 @@ const handleUpdate = async () => {
     userStore.user = user.value;
     
     showEditModal.value = false;
-    alert('修改成功！');
+    alert(t('update_success'));
   } catch (error) {
     console.error('Update failed:', error);
-    alert('修改失败，请重试');
+    alert(t('update_failed'));
   } finally {
     updating.value = false;
   }
