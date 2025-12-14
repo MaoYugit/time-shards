@@ -1,18 +1,18 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 
-// --- 引入\编辑器组件 ---
+// --- 引入编辑器组件 ---
 import VditorEditor from "@/components/common/VditorEditor.vue";
 
-// 引入 Store 和 API
+// --- 引入 Store 和 API ---
 import { useUserStore } from "@/stores/user";
 import { createArticle, updateArticle, getArticleById } from "@/api/article";
 import { uploadFile } from "@/api/attachment";
 import { getCategories, createCategory } from "@/api/category";
 import { getTags, createTag } from "@/api/tag";
 
-import { useI18n } from "vue-i18n";
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
@@ -27,24 +27,26 @@ const saving = ref(false);
 const form = ref({
   title: "",
   summary: "",
-  content: "", // 将通过 v-model 绑定给 VditorEditor
+  content: "",
   coverImage: "",
-  categoryId: "",
+  categoryId: "", // 存储选中的分类 ID
   status: 1,
-  tags: [],
+  tags: [], // 存储选中的 Tag 对象列表
 });
 
-// 元数据
+// 元数据（从后端获取的完整列表）
 const categories = ref([]);
 const availableTags = ref([]);
 
 // UI 交互状态
-const tagSearchText = ref("");
-const showTagDropdown = ref(false);
-const tagInputRef = ref(null);
+const catSearchText = ref(""); // 分类输入框文本
+const tagSearchText = ref(""); // 标签输入框文本
+const showCatDropdown = ref(false); // 控制分类下拉菜单
+const showTagDropdown = ref(false); // 控制标签下拉菜单
 const catInputRef = ref(null);
+const tagInputRef = ref(null);
 
-// --- 辅助函数 ---
+// --- 辅助函数：生成 Slug ---
 const generateSlug = (text) => {
   return text
     .toLowerCase()
@@ -54,32 +56,28 @@ const generateSlug = (text) => {
     .replace(/^-+|-+$/g, "");
 };
 
-// --- 核心逻辑：编辑器上传回调 ---
-// 这个函数作为 Prop 传给子组件，让子组件在用户选择图片后调用
+// --- 编辑器上传回调 ---
 const handleEditorUpload = async (files, vditorInstance) => {
   const file = files[0];
   if (!file) return;
   try {
-    // 1. 调用上传 API
     const res = await uploadFile(file, userStore.user.id);
-
-    // 2. 拼接 URL
-    const name = file.name;
-    const baseURL = "http://localhost:8080"; // 建议移至环境变量 import.meta.env.VITE_API_URL
+    // 建议：baseURL 最好放入 import.meta.env.VITE_API_URL
+    const baseURL = "http://localhost:8080";
     const url = baseURL + res.fileUrl;
-
-    // 3. 将 Markdown 图片语法插入编辑器
-    vditorInstance.insertValue(`![${name}](${url})`);
-
-    // 返回 null 告诉 Vditor 我们已经处理完了
+    vditorInstance.insertValue(`![${file.name}](${url})`);
     return null;
   } catch (error) {
     console.error("Upload failed:", error);
-    return "Upload failed"; // 返回错误信息供 Vditor 显示
+    return "Upload failed";
   }
 };
 
-// --- Category 逻辑 (保持原有逻辑) ---
+// ==========================================
+// --- Category 逻辑 (已重构，模仿 Tag 交互) ---
+// ==========================================
+
+// 1. 计算属性：过滤分类列表
 const filteredCategories = computed(() => {
   if (!catSearchText.value) return categories.value;
   return categories.value.filter((c) =>
@@ -87,43 +85,59 @@ const filteredCategories = computed(() => {
   );
 });
 
+// 2. 计算属性：获取当前选中的分类对象（用于显示 Chip）
 const selectedCategory = computed(() => {
   if (!form.value.categoryId) return null;
   return categories.value.find((c) => c.id === form.value.categoryId);
 });
 
+// 3. 选中分类
 const selectCategory = (cat) => {
   form.value.categoryId = cat.id;
-  catSearchText.value = "";
+  catSearchText.value = ""; // 清空输入
+  showCatDropdown.value = false; // 关闭下拉
 };
 
+// 4. 移除分类
 const removeCategory = () => {
   form.value.categoryId = "";
   catSearchText.value = "";
+  // 移除后，DOM 更新让 input 重新出现，需要等待 tick 后聚焦
+  nextTick(() => {
+    catInputRef.value?.focus();
+  });
 };
 
+// 5. 创建或选中分类 (回车键触发)
 const handleCreateCategory = async () => {
   const name = catSearchText.value.trim();
   if (!name) return;
+
+  // A. 查重：如果本地已有，直接选中
   const existing = categories.value.find((c) => c.name === name);
   if (existing) {
     selectCategory(existing);
     return;
   }
+
+  // B. 创建：调用 API
   try {
     const newCat = {
       name: name,
       slug: generateSlug(name) || `cat-${Date.now()}`,
     };
     const res = await createCategory(newCat);
-    categories.value.push(res);
-    selectCategory(res);
+    categories.value.push(res); // 更新本地列表
+    selectCategory(res); // 选中新建项
   } catch (error) {
     console.error("Create category failed:", error);
   }
 };
 
-// --- Tag 逻辑 (保持原有逻辑) ---
+// ==========================================
+// --- Tag 逻辑 (保持不变，用于对比) ---
+// ==========================================
+
 const filteredTags = computed(() => {
   const selectedIds = new Set(form.value.tags.map((t) => t.id));
   let list = availableTags.value.filter((t) => !selectedIds.has(t.id));
@@ -139,7 +153,7 @@ const selectTag = (tag) => {
   form.value.tags.push(tag);
   tagSearchText.value = "";
   showTagDropdown.value = false;
-  if (tagInputRef.value) tagInputRef.value.focus();
+  tagInputRef.value?.focus();
 };
 
 const removeTag = (index) => {
@@ -174,7 +188,9 @@ const handleTagInputDelete = () => {
   }
 };
 
-// --- 数据加载与初始化 ---
+// ==========================================
+// --- 数据初始化 ---
+// ==========================================
 const fetchMetadata = async () => {
   try {
     const [catRes, tagRes] = await Promise.all([getCategories(), getTags()]);
@@ -197,7 +213,7 @@ const initForm = async () => {
     try {
       const article = await getArticleById(route.params.id);
 
-      // 处理 Tags 回显逻辑
+      // 处理 Tags 回显
       let currentTags = [];
       if (article.tags && article.tags.length > 0) {
         if (typeof article.tags[0] === "object") {
@@ -213,15 +229,7 @@ const initForm = async () => {
         ...article,
         tags: currentTags,
       };
-
-      // 回显 Category 名称 (已通过 selectedCategory computed 处理，无需 catSearchText)
-      /*
-      if (form.value.categoryId) {
-        // logic removed
-      }
-      */
-
-      // 注意：这里无需手动调用编辑器 setValue，v-model 会自动处理 form.value.content 的变化
+      // categoryId 已经在 article 对象中，无需额外处理
     } catch (error) {
       console.error("Article load error:", error);
     } finally {
@@ -230,7 +238,9 @@ const initForm = async () => {
   }
 };
 
-// --- 表单提交 ---
+// ==========================================
+// --- 保存发布逻辑 (包含自动创建分类补丁) ---
+// ==========================================
 const handleCoverUpload = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -244,7 +254,7 @@ const handleCoverUpload = async (event) => {
 };
 
 const saveArticle = async () => {
-  // 1. 简单校验
+  // 1. 基础校验
   if (!form.value.title || !form.value.content) {
     alert(t("title_content_required"));
     return;
@@ -252,12 +262,39 @@ const saveArticle = async () => {
 
   saving.value = true;
   try {
+    // --- 自动补全分类逻辑 START ---
+    // 如果用户输入了分类名，但没按回车选中（categoryId为空，但输入框有值）
+    let finalCategoryId = form.value.categoryId;
+
+    if (!finalCategoryId && catSearchText.value.trim()) {
+      const name = catSearchText.value.trim();
+      const existing = categories.value.find((c) => c.name === name);
+
+      if (existing) {
+        finalCategoryId = existing.id;
+      } else {
+        // 尝试自动创建
+        try {
+          const newCat = {
+            name: name,
+            slug: generateSlug(name) || `cat-${Date.now()}`,
+          };
+          const res = await createCategory(newCat);
+          categories.value.push(res);
+          finalCategoryId = res.id;
+        } catch (err) {
+          console.error("Auto create category failed:", err);
+        }
+      }
+    }
+    // --- 自动补全分类逻辑 END ---
+
     const data = {
       ...form.value,
+      categoryId: finalCategoryId, // 使用处理后的 ID
       user_id: userStore.user.id,
-      tags: form.value.tags, // 传递 Tag 对象列表
+      tags: form.value.tags,
     };
-    if (!catSearchText.value) data.categoryId = null;
 
     if (isEditMode.value) {
       await updateArticle(data);
@@ -278,6 +315,7 @@ const handleClickOutside = (e) => {
   const sidebar = document.querySelector(".sidebar");
   if (sidebar && !sidebar.contains(e.target)) {
     showTagDropdown.value = false;
+    showCatDropdown.value = false; // 同时也关闭分类下拉
   }
 };
 
@@ -285,7 +323,6 @@ onMounted(() => {
   initForm();
   document.addEventListener("click", handleClickOutside);
 });
-// onBeforeUnmount 不需要手动销毁编辑器了，子组件自己会处理
 </script>
 
 <template>
@@ -304,14 +341,13 @@ onMounted(() => {
       <!-- 左侧主编辑区 -->
       <div class="main-editor">
         <div class="form-group title-group">
-          <input v-model="form.title" :placeholder="t('title_placeholder')" class="title-input" />
+          <input
+            v-model="form.title"
+            :placeholder="t('title_placeholder')"
+            class="title-input"
+          />
         </div>
 
-        <!-- 
-             核心修改点：
-             替换原有的 <div id="vditor"> 
-             使用封装好的组件 
-        -->
         <div class="editor-wrapper-container">
           <VditorEditor
             v-model="form.content"
@@ -321,33 +357,68 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 右侧侧边栏 (保持不变) -->
+      <!-- 右侧侧边栏 -->
       <div class="sidebar">
-        <!-- Category -->
+        <!-- Category (已修改为和 Tag 同样的交互样式) -->
         <div class="form-group relative-group">
           <label>{{ t("category_label") }}</label>
-          <div class="tags-input-container category-container" @click="catInputRef?.focus()">
-             <span v-if="selectedCategory" class="category-chip">
-                {{ selectedCategory.name }}
-                <i @click.stop="removeCategory">&times;</i>
-             </span>
-             <input
-               v-else
-               ref="catInputRef"
-               type="text"
-               v-model="catSearchText"
-               @keydown.enter.prevent="handleCreateCategory"
-               :placeholder="t('category_placeholder')"
-               class="tag-input-field"
-               autocomplete="off"
-             />
+
+          <!-- 容器：复用 tags-input-container 样式 -->
+          <div
+            class="tags-input-container"
+            :class="{ active: showCatDropdown }"
+            @click="catInputRef?.focus()"
+          >
+            <!-- 选中状态：显示橙色 Chip -->
+            <span v-if="selectedCategory" class="tag-chip is-category">
+              {{ selectedCategory.name }}
+              <i @click.stop="removeCategory">&times;</i>
+            </span>
+
+            <!-- 未选中状态：显示输入框 -->
+            <input
+              v-else
+              ref="catInputRef"
+              v-model="catSearchText"
+              @focus="showCatDropdown = true"
+              @input="showCatDropdown = true"
+              @keydown.enter.prevent="handleCreateCategory"
+              :placeholder="t('category_placeholder')"
+              class="tag-input-field"
+              autocomplete="off"
+            />
           </div>
+
+          <!-- Category 下拉菜单 -->
+          <ul v-if="showCatDropdown && !selectedCategory" class="dropdown-menu">
+            <!-- 渲染现有分类 -->
+            <li
+              v-for="cat in filteredCategories"
+              :key="cat.id"
+              @click="selectCategory(cat)"
+            >
+              {{ cat.name }}
+            </li>
+
+            <!-- 渲染创建选项 -->
+            <li
+              v-if="filteredCategories.length === 0 && catSearchText"
+              class="create-option"
+              @click="handleCreateCategory"
+            >
+              {{ t("create_tag_fmt") }} "{{ catSearchText }}"
+            </li>
+          </ul>
         </div>
 
-        <!-- Tags -->
+        <!-- Tags (保持不变) -->
         <div class="form-group relative-group">
           <label>{{ t("tags_label") }}</label>
-          <div class="tags-input-container" @click="tagInputRef?.focus()">
+          <div
+            class="tags-input-container"
+            :class="{ active: showTagDropdown }"
+            @click="tagInputRef?.focus()"
+          >
             <span
               v-for="(tag, index) in form.tags"
               :key="tag.id"
@@ -404,11 +475,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* 
-   在这里我们删除了所有 :deep(.vditor...) 的样式 
-   只保留布局样式，非常清爽
-*/
-
+/* 容器布局 */
 .editor-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -439,11 +506,9 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* 新增：给编辑器组件一个明确的 Flex 容器，确保它能占满剩余空间 */
 .editor-wrapper-container {
   flex: 1;
   overflow: hidden;
-  /* 如果你不加这个，Vditor 可能会撑破布局 */
 }
 
 .title-input {
@@ -459,7 +524,7 @@ onMounted(() => {
   outline: none;
 }
 
-/* --- 侧边栏样式 (保持不变) --- */
+/* 侧边栏基础 */
 .sidebar {
   width: 300px;
   overflow-y: auto;
@@ -483,8 +548,7 @@ onMounted(() => {
 }
 
 .form-group input,
-.form-group textarea,
-.form-group select {
+.form-group textarea {
   width: 100%;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--color-border);
@@ -498,7 +562,77 @@ onMounted(() => {
   border-color: #00ff9d;
 }
 
-/* Dropdown & Tags 样式 (保持不变) */
+/* ========================================= */
+/* === 核心：统一 Category 和 Tag 的样式 === */
+/* ========================================= */
+
+/* 输入框容器 */
+.tags-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--color-border);
+  padding: 0.4rem;
+  border-radius: 4px;
+  min-height: 38px;
+  cursor: text;
+  transition: border-color 0.2s;
+}
+
+/* 聚焦时的高亮 */
+.tags-input-container:focus-within,
+.tags-input-container.active {
+  border-color: #00ff9d;
+}
+
+/* 隐形输入框 */
+.tag-input-field {
+  flex: 1;
+  min-width: 60px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0.2rem !important;
+  margin: 0 !important;
+  color: #eee;
+  outline: none;
+}
+.tag-input-field:focus {
+  box-shadow: none !important;
+}
+
+/* Chip 标签基础样式 (默认 Tags 使用绿色) */
+.tag-chip {
+  background: rgba(0, 255, 157, 0.15); /* 浅绿背景 */
+  color: #00ff9d; /* 亮绿文字 */
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  user-select: none;
+}
+
+/* Chip 变体：Category 专用样式 (使用橙色系区分) */
+.tag-chip.is-category {
+  background: rgba(255, 165, 0, 0.15); /* 浅橙背景 */
+  color: #ff9d00; /* 亮橙文字 */
+}
+
+/* 这里的删除图标 */
+.tag-chip i {
+  cursor: pointer;
+  font-style: normal;
+  font-weight: bold;
+  opacity: 0.7;
+}
+.tag-chip i:hover {
+  opacity: 1;
+  color: #fff;
+}
+
+/* 下拉菜单 */
 .dropdown-menu {
   position: absolute;
   top: 100%;
@@ -532,70 +666,10 @@ onMounted(() => {
 .create-option {
   color: #00ff9d !important;
   font-weight: bold;
-}
-.empty-option {
-  color: #777;
-  cursor: default;
-  font-style: italic;
+  border-top: 1px solid #444;
 }
 
-.tags-input-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--color-border);
-  padding: 0.4rem;
-  border-radius: 4px;
-  min-height: 38px;
-  cursor: text;
-}
-.tags-input-container:focus-within {
-  border-color: #00ff9d;
-}
-
-.tag-chip, .category-chip {
-  background: rgba(0, 255, 157, 0.15);
-  color: #00ff9d;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-/* Category Chip specific color (Cyan/Blue) */
-.category-chip {
-  background: rgba(0, 210, 255, 0.15);
-  color: #00d2ff;
-}
-
-.tag-chip i, .category-chip i {
-  cursor: pointer;
-  font-style: normal;
-  font-weight: bold;
-  opacity: 0.7;
-}
-.tag-chip i:hover {
-  opacity: 1;
-  color: #fff;
-}
-
-.tag-input-field {
-  flex: 1;
-  min-width: 60px;
-  background: transparent !important;
-  border: none !important;
-  padding: 0.2rem !important;
-  margin: 0 !important;
-  color: #eee;
-  outline: none;
-}
-.tag-input-field:focus {
-  box-shadow: none !important;
-}
-
+/* 图片预览 & 按钮 */
 .image-preview img {
   width: 100%;
   margin-top: 0.5rem;
