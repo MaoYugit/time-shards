@@ -9,10 +9,16 @@
       :enabled="settingsStore.mouseEffectEnabled"
     />
 
+    <!-- 导航栏 -->
     <Navbar />
+
+    <!-- 主内容区域 -->
     <main>
       <router-view />
     </main>
+
+    <!-- 页脚 -->
+    <Footer />
   </div>
 </template>
 
@@ -20,6 +26,7 @@
 import { useThemeStore } from "./stores/theme";
 import { useSettingsStore } from "./stores/settings";
 import Navbar from "./components/layout/Navbar.vue";
+import Footer from "./components/layout/Footer.vue";
 import BackgroundManager from "./components/background/BackgroundManager.vue";
 import MouseEffectManager from "./components/effects/MouseEffectManager.vue";
 

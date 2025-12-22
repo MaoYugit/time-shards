@@ -12,6 +12,7 @@ export default defineConfig({
   // --- 新增以下部分 ---
   server: {
     port: 5173, // 前端运行端口
+    host: true, // 允许局域网访问
     proxy: {
       // 假设你的接口请求是以 /api 开头的
       "/api": {

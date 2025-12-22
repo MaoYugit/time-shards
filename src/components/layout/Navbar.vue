@@ -14,7 +14,11 @@
           :placeholder="t('searchPlaceholder')"
           @keyup.enter="handleSearch"
         />
-        <button class="search-icon-btn" @click="handleSearch">
+        <button
+          class="search-icon-btn"
+          @click="handleSearch"
+          aria-label="Search"
+        >
           <!-- 搜索 SVG 图标 -->
           <svg
             width="18"
@@ -49,20 +53,29 @@
     <!-- 3. 右侧区域：操作按钮 -->
     <div class="navbar-actions">
       <!-- 语言切换 -->
-      <button @click="toggleLang" class="icon-btn" title="Switch Language">
+      <button
+        @click="toggleLang"
+        class="icon-btn"
+        title="Switch Language"
+        aria-label="Toggle language"
+      >
         <span class="lang-text">{{ locale === "zh" ? "EN" : "中" }}</span>
       </button>
 
-
-
       <!-- 设置 -->
-      <button @click="router.push('/settings')" class="icon-btn" title="Settings">
+      <button
+        @click="router.push('/settings')"
+        class="icon-btn"
+        title="Settings"
+      >
         <span>⚙️</span>
       </button>
 
       <!-- 用户信息 (桌面端精简显示，移动端在菜单里) -->
       <div v-if="userStore.isLoggedIn" class="user-menu desktop-only">
-        <router-link to="/profile" class="username-link">{{ userStore.user?.username }}</router-link>
+        <router-link to="/profile" class="username-link">{{
+          userStore.user?.username
+        }}</router-link>
         <button @click="handleLogout" class="logout-btn">Logout</button>
       </div>
       <div v-else class="auth-links desktop-only">
@@ -100,51 +113,71 @@
     </div>
 
     <!-- 4. 移动端下拉菜单 -->
-    <div class="mobile-menu" :class="{ 'is-open': isMobileMenuOpen }">
-      <!-- 移动端搜索 -->
-      <div class="search-container mobile-search">
-        <input
-          type="text"
-          v-model="searchQuery"
-          :placeholder="t('searchPlaceholder')"
-          @keyup.enter="handleSearch"
-        />
-        <button class="search-icon-btn" @click="handleSearch">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
-      </div>
-
-      <router-link to="/" @click="closeMobileMenu">{{ t("home") }}</router-link>
-      <router-link to="/categories" @click="closeMobileMenu">{{ t("nav_categories") }}</router-link>
-      <router-link to="/tags" @click="closeMobileMenu">{{ t("nav_tags") }}</router-link>
-      <router-link to="/archive" @click="closeMobileMenu">{{ t("nav_archive") }}</router-link>
-      <router-link
-        to="/editor"
-        v-if="userStore.isLoggedIn"
-        @click="closeMobileMenu"
-        >{{ t("new") }}</router-link
+    <Transition name="fade-slide">
+      <div
+        v-if="isMobileMenuOpen"
+        class="mobile-menu"
+        :class="{ 'is-open': isMobileMenuOpen }"
       >
-      <router-link to="/about" @click="closeMobileMenu">{{ t("about") }}</router-link>
-      <router-link to="/settings" @click="closeMobileMenu">{{ t("nav_settings") }}</router-link>
+        <!-- 移动端搜索 -->
+        <div class="search-container mobile-search">
+          <input
+            type="text"
+            v-model="searchQuery"
+            :placeholder="t('searchPlaceholder')"
+            @keyup.enter="handleSearch"
+          />
+          <button class="search-icon-btn" @click="handleSearch">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </div>
 
-      <div class="mobile-auth" v-if="userStore.isLoggedIn">
-        <router-link to="/profile" @click="closeMobileMenu">{{ userStore.user?.username }}</router-link>
-        <button @click="handleLogout" class="logout-btn">Logout</button>
+        <router-link to="/" @click="closeMobileMenu">{{
+          t("home")
+        }}</router-link>
+        <router-link to="/categories" @click="closeMobileMenu">{{
+          t("nav_categories")
+        }}</router-link>
+        <router-link to="/tags" @click="closeMobileMenu">{{
+          t("nav_tags")
+        }}</router-link>
+        <router-link to="/archive" @click="closeMobileMenu">{{
+          t("nav_archive")
+        }}</router-link>
+        <router-link
+          to="/editor"
+          v-if="userStore.isLoggedIn"
+          @click="closeMobileMenu"
+          >{{ t("new") }}</router-link
+        >
+        <router-link to="/about" @click="closeMobileMenu">{{
+          t("about")
+        }}</router-link>
+        <router-link to="/settings" @click="closeMobileMenu">{{
+          t("nav_settings")
+        }}</router-link>
+
+        <div class="mobile-auth" v-if="userStore.isLoggedIn">
+          <router-link to="/profile" @click="closeMobileMenu">{{
+            userStore.user?.username
+          }}</router-link>
+          <button @click="handleLogout" class="logout-btn">Logout</button>
+        </div>
+        <div class="mobile-auth" v-else>
+          <router-link to="/login" @click="closeMobileMenu">Login</router-link>
+        </div>
       </div>
-      <div class="mobile-auth" v-else>
-        <router-link to="/login" @click="closeMobileMenu">Login</router-link>
-      </div>
-    </div>
+    </Transition>
   </nav>
 </template>
 
@@ -165,7 +198,6 @@ const isMobileMenuOpen = ref(false);
 
 // 动作处理
 
-
 const toggleLang = () => {
   locale.value = locale.value === "zh" ? "en" : "zh";
   localStorage.setItem("user-locale", locale.value);
@@ -181,7 +213,7 @@ const closeMobileMenu = () => {
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.push({ path: '/search', query: { q: searchQuery.value } });
+    router.push({ path: "/search", query: { q: searchQuery.value } });
     closeMobileMenu();
     searchQuery.value = "";
   }
@@ -207,8 +239,6 @@ const handleLogout = () => {
   top: 0;
   z-index: 100;
   backdrop-filter: blur(10px);
-  /* 确保相对定位，方便移动端菜单绝对定位 */
-  position: relative;
 }
 
 /* 左侧区域布局 */
@@ -280,6 +310,7 @@ const handleLogout = () => {
 }
 
 .navbar-links a {
+  position: relative;
   color: var(--color-text-sub);
   font-size: 0.95rem;
   font-weight: 500;
@@ -291,6 +322,17 @@ const handleLogout = () => {
 .navbar-links a:hover,
 .navbar-links a.router-link-active {
   color: var(--color-accent-rational);
+}
+
+.navbar-links a.router-link-active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--color-accent-rational);
+  border-radius: 2px;
 }
 
 /* 右侧操作区域 */
@@ -391,6 +433,16 @@ const handleLogout = () => {
   text-align: center;
 }
 
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
 .mobile-search {
   max-width: 100%;
   margin-bottom: 1rem;
@@ -428,11 +480,6 @@ const handleLogout = () => {
   .navbar-actions {
     flex: 1; /* 占据剩余空间 */
     justify-content: flex-end;
-  }
-
-  /* 菜单展开状态 */
-  .mobile-menu.is-open {
-    display: flex;
   }
 }
 </style>
