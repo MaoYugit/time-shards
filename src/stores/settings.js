@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 
 export const useSettingsStore = defineStore('settings', () => {
     // 鼠标特效设置
-    const mouseEffect = ref(localStorage.getItem('mouseEffect') || 'flower');
+    const mouseEffect = ref(localStorage.getItem('mouseEffect') || 'firework');
     const mouseEffectEnabled = ref(localStorage.getItem('mouseEffectEnabled') !== 'false');
 
     // 背景设置
@@ -16,16 +16,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
     // 设置选项定义（用于UI渲染）
     const mouseEffectOptions = [
-        { type: 'flower', name: 'effect_flower', icon: '🌸', description: 'effect_flower_desc' },
-        { type: 'firework', name: 'effect_firework', icon: '🎆', description: 'effect_firework_desc' },
-        { type: 'star', name: 'effect_star', icon: '✨', description: 'effect_star_desc' }
+        { type: 'firework', name: 'effect_firework', icon: '🎆', description: 'effect_firework_desc' }
     ];
 
     const backgroundOptions = [
-        { type: 'shards', name: 'bg_shards', icon: '💎', description: 'bg_shards_desc' },
-        { type: 'nebula', name: 'bg_nebula', icon: '🌌', description: 'bg_nebula_desc' },
-        { type: 'matrix', name: 'bg_matrix', icon: '💚', description: 'bg_matrix_desc' },
-        { type: 'galaxy', name: 'bg_galaxy', icon: '🌀', description: 'bg_galaxy_desc' }
+        { type: 'shards', name: 'bg_shards', icon: '💎', description: 'bg_shards_desc' }
     ];
 
     // Actions

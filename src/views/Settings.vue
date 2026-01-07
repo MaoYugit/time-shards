@@ -24,20 +24,15 @@
             </label>
           </div>
           
-          <div class="options-grid" :class="{ disabled: !settingsStore.mouseEffectEnabled }">
-            <button 
-              v-for="effect in settingsStore.mouseEffectOptions" 
-              :key="effect.type"
-              class="option-card"
-              :class="{ active: settingsStore.mouseEffect === effect.type }"
-              @click="settingsStore.setMouseEffect(effect.type)"
-            >
-              <div class="option-icon">{{ effect.icon }}</div>
+          <!-- 单一效果展示 -->
+           <div class="single-option" :class="{ disabled: !settingsStore.mouseEffectEnabled }">
+            <div class="option-card active default-cursor">
+              <div class="option-icon">🎆</div>
               <div class="option-info">
-                <span class="option-name">{{ t(effect.name) }}</span>
-                <span class="option-desc">{{ t(effect.description) }}</span>
+                 <span class="option-name">{{ t('effect_firework') }}</span>
+                 <span class="option-desc">{{ t('effect_firework_desc') }}</span>
               </div>
-            </button>
+            </div>
           </div>
         </div>
 
@@ -47,20 +42,15 @@
             <h3>{{ t('setting_background') }}</h3>
           </div>
           
-          <div class="options-grid">
-            <button 
-              v-for="bg in settingsStore.backgroundOptions" 
-              :key="bg.type"
-              class="option-card"
-              :class="{ active: settingsStore.backgroundType === bg.type }"
-              @click="settingsStore.setBackgroundType(bg.type)"
-            >
-              <div class="option-icon">{{ bg.icon }}</div>
+          <!-- 单一背景展示 -->
+          <div class="single-option">
+             <div class="option-card active default-cursor">
+              <div class="option-icon">💎</div>
               <div class="option-info">
-                <span class="option-name">{{ t(bg.name) }}</span>
-                <span class="option-desc">{{ t(bg.description) }}</span>
+                <span class="option-name">{{ t('bg_shards') }}</span>
+                <span class="option-desc">{{ t('bg_shards_desc') }}</span>
               </div>
-            </button>
+            </div>
           </div>
         </div>
       </section>
@@ -244,9 +234,14 @@ input:checked + .slider:before {
   transition: opacity 0.3s ease;
 }
 
-.options-grid.disabled {
+.options-grid.disabled,
+.single-option.disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.single-option {
+  max-width: 300px;
 }
 
 .option-card {
@@ -260,6 +255,10 @@ input:checked + .slider:before {
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: left;
+}
+
+.option-card.default-cursor {
+  cursor: default;
 }
 
 .option-card:hover {

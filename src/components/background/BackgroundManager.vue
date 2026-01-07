@@ -13,16 +13,13 @@ const props = defineProps({
   backgroundType: {
     type: String,
     default: 'shards',
-    validator: (value) => ['shards', 'nebula', 'matrix', 'galaxy'].includes(value)
+    validator: (value) => ['shards'].includes(value)
   }
 });
 
 // 动态加载背景组件
 const backgroundComponents = {
-  shards: defineAsyncComponent(() => import('./TimeShardsBackground.vue')),
-  nebula: defineAsyncComponent(() => import('./CosmicNebulaBackground.vue')),
-  matrix: defineAsyncComponent(() => import('./MatrixRainBackground.vue')),
-  galaxy: defineAsyncComponent(() => import('./GalaxySpiralBackground.vue'))
+  shards: defineAsyncComponent(() => import('./TimeShardsBackground.vue'))
 };
 
 const currentBackgroundComponent = computed(() => {
